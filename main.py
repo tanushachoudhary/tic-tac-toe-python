@@ -12,8 +12,8 @@ GREEN=(0,255,0)
 BLACK=(0,0,0)
 
 #propostions & sizes
-WIDTH=300
-HEIGHT=300
+WIDTH=600
+HEIGHT=600
 LINE_WIDTH=5
 BOARD_ROWS=3
 BOARD_COLS=3
@@ -38,11 +38,32 @@ def draw_lines(color=WHITE):
 def draw_figures(color=WHITE):
     for row in range(BOARD_ROWS):
         for col in range(BOARD_COLS):
-            if board[row][col]==1:
-                pygame.draw.circle(screen,color,(int(col*SQUARE_SIZE + SQUARE_SIZE//2),int(row * SQUARE_SIZE + SQUARE_SIZE//2)),CIRCLE_RADIUS,CIRCLE_WIDTH)
-            elif board[row][col]==2:
-                pygame.draw.line(screen,color,start_pos=(col * SQUARE_SIZE + SQUARE_SIZE // 4, row * SQUARE_SIZE + SQUARE_SIZE // 4),end_pos=(col * SQUARE_SIZE + 3 * SQUARE_SIZE // 4, row * SQUARE_SIZE + 3 * SQUARE_SIZE // 4) )
-                pygame.draw.line(screen,color,start_pos=(col * SQUARE_SIZE + SQUARE_SIZE // 4, row * SQUARE_SIZE + 3 * SQUARE_SIZE // 4),end_pos=(col * SQUARE_SIZE + 3 * SQUARE_SIZE // 4, row * SQUARE_SIZE + SQUARE_SIZE // 4) )
+            if board[row][col] == 1:
+                # Draw circle for player 1
+                pygame.draw.circle(
+                    screen,
+                    color,
+                    (int(col * SQUARE_SIZE + SQUARE_SIZE // 2), int(row * SQUARE_SIZE + SQUARE_SIZE // 2)),
+                    CIRCLE_RADIUS,
+                    CIRCLE_WIDTH
+                )
+            elif board[row][col] == 2:
+                # Draw cross for player 2
+                pygame.draw.line(
+                    screen,
+                    color,
+                    (col * SQUARE_SIZE + SQUARE_SIZE // 4, row * SQUARE_SIZE + SQUARE_SIZE // 4),
+                    (col * SQUARE_SIZE + 3 * SQUARE_SIZE // 4, row * SQUARE_SIZE + 3 * SQUARE_SIZE // 4),
+                    CROSS_WIDTH
+                )
+                pygame.draw.line(
+                    screen,
+                    color,
+                    (col * SQUARE_SIZE + SQUARE_SIZE // 4, row * SQUARE_SIZE + 3 * SQUARE_SIZE // 4),
+                    (col * SQUARE_SIZE + 3 * SQUARE_SIZE // 4, row * SQUARE_SIZE + SQUARE_SIZE // 4),
+                    CROSS_WIDTH
+                )
+
     
 def mark_square(row,col,player):
     board[row][col]=player
@@ -54,8 +75,8 @@ def is_board_full(check_board=board):
     for row in range(BOARD_ROWS):
         for col in range(BOARD_COLS):
             if check_board[row][col]==0:
-                return True
-    return False
+                return False
+    return True
 
 def check_win(player,check_board=board):
     for col in range(BOARD_COLS):
@@ -133,3 +154,48 @@ draw_lines()
 player = 1
 game_over = False
 
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+            
+        if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
+            mouseX = event.pos[0] // SQUARE_SIZE
+            mouseY = event.pos[1] // SQUARE_SIZE
+            
+            if available_square(mouseY,mouseX):
+                mark_square(mouseY,mouseX,player)
+                if check_win(player):
+                    game_over = True
+                player = player % 2 + 1
+                
+                if not game_over:
+                    if best_move():
+                        if check_win(2):
+                            game_over = True
+                        player = player % 2 + 1
+                        
+                if not game_over:
+                    if is_board_full():
+                        game_over = True
+                        
+        if event.type == pygame.KEYDOWN:
+            if event.key ==  pygame.K_r:
+                restart_game()
+                game_over = False
+                player = 1
+                
+    if not game_over:
+        draw_figures()
+    else:
+        if check_win(1):
+            draw_figures(GREEN)
+            draw_lines(GREEN)
+        elif check_win(2):
+            draw_figures(RED)
+            draw_lines(RED)
+        else:
+            draw_figures(GRAY)
+            draw_lines(GRAY)
+            
+    pygame.display.update()
